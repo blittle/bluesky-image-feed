@@ -1,0 +1,313 @@
+import { h, render } from 'preact';
+import { useState, useEffect } from 'preact/hooks';
+import { BskyAgent } from '@atproto/api';
+
+const agent = new BskyAgent({
+  service: 'https://public.api.bsky.app',
+});
+
+async function getImagePostsFromUser(handle) {
+  const response = await agent.getAuthorFeed({
+    actor: handle,
+    limit: 50,
+  });
+
+  const postsWithImages = [];
+
+  for (const item of response.data.feed) {
+    const post = item.post;
+
+    if (post.embed?.$type === 'app.bsky.embed.images#view' && post.embed.images) {
+      postsWithImages.push({
+        uri: post.uri,
+        cid: post.cid,
+        author: {
+          handle: post.author.handle,
+          displayName: post.author.displayName,
+          avatar: post.author.avatar,
+        },
+        text: post.record?.text || '',
+        images: post.embed.images.map((img) => ({
+          thumb: img.thumb,
+          fullsize: img.fullsize,
+          alt: img.alt,
+        })),
+        createdAt: post.indexedAt,
+        replyCount: post.replyCount || 0,
+        repostCount: post.repostCount || 0,
+        likeCount: post.likeCount || 0,
+      });
+    }
+  }
+
+  return postsWithImages;
+}
+
+function ImageFeed({ handle }) {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedIndex, setSelectedIndex] = useState(null);
+  const [filterHashtag, setFilterHashtag] = useState(null);
+
+  useEffect(() => {
+    if (handle) {
+      setLoading(true);
+      getImagePostsFromUser(handle)
+        .then(setPosts)
+        .finally(() => setLoading(false));
+    }
+  }, [handle]);
+
+  const parseTextAndHashtags = (text) => {
+    const hashtagRegex = /#\w+/g;
+    const hashtags = text.match(hashtagRegex) || [];
+    const filteredHashtags = hashtags
+      .filter(
+        (tag) =>
+          tag.toLowerCase() !== '#photography' && tag.toLowerCase() !== '#noai'
+      )
+      .map((tag) => tag.substring(1));
+    const textWithoutHashtags = text.replace(hashtagRegex, '').trim();
+    return { text: textWithoutHashtags, hashtags: filteredHashtags };
+  };
+
+  const allImages = posts.flatMap((post) =>
+    post.images.map((image) => ({
+      ...image,
+      post,
+    }))
+  );
+
+  const filteredImages = filterHashtag
+    ? allImages.filter((item) => {
+        if (!item.post.text) return false;
+        const { hashtags } = parseTextAndHashtags(item.post.text);
+        return hashtags.includes(filterHashtag);
+      })
+    : allImages;
+
+  const handleKeyDown = (idx, e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setSelectedIndex(selectedIndex === idx ? null : idx);
+    } else if (e.key === 'Escape' && selectedIndex !== null) {
+      setSelectedIndex(null);
+    }
+  };
+
+  const handleFocus = (idx) => {
+    if (selectedIndex !== null && selectedIndex !== idx) {
+      setSelectedIndex(null);
+    }
+  };
+
+  if (loading) {
+    return h('div', { style: { padding: '2rem', textAlign: 'center' } }, 'Loading...');
+  }
+
+  return h('div', null,
+    h('style', null, `
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes fadeInScale {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .grid-item-animate {
+        animation: fadeInScale 0.6s ease-out;
+      }
+      .filter-banner {
+        animation: slideDown 0.3s ease-out;
+      }
+      .overlay-content {
+        animation: slideUp 0.3s ease-out;
+      }
+    `),
+    filterHashtag && h('div', {
+      className: 'filter-banner',
+      style: {
+        maxWidth: '1200px',
+        margin: '0 auto',
+        padding: '1rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+      }
+    },
+      h('span', null, 'Filtering by:'),
+      h('button', {
+        onClick: () => setFilterHashtag(null),
+        style: {
+          backgroundColor: '#0085ff',
+          color: '#fff',
+          padding: '0.5rem 1rem',
+          borderRadius: '4px',
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: '0.875rem',
+          fontWeight: '500',
+        }
+      }, `${filterHashtag} ×`)
+    ),
+    h('div', {
+      style: {
+        maxWidth: '1200px',
+        margin: '0 auto',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 400px), 1fr))',
+      },
+      role: 'grid',
+      'aria-label': `Image feed from @${handle}`,
+    },
+      filteredImages.map((item, idx) => {
+        const parsed = item.post.text ? parseTextAndHashtags(item.post.text) : { text: '', hashtags: [] };
+
+        return h('div', {
+          key: idx,
+          role: 'gridcell',
+          className: 'grid-item-animate',
+          style: {
+            position: 'relative',
+            cursor: 'pointer',
+            opacity: selectedIndex !== null && selectedIndex !== idx ? 0.3 : 1,
+            transition: 'opacity 0.3s ease',
+            animationDelay: `${idx * 0.05}s`,
+          },
+          onClick: () => setSelectedIndex(selectedIndex === idx ? null : idx),
+          onKeyDown: (e) => handleKeyDown(idx, e),
+          onFocus: () => handleFocus(idx),
+          tabIndex: 0,
+          'aria-pressed': selectedIndex === idx,
+          'aria-label': item.alt || `Image ${idx + 1} from post: ${item.post.text || 'No description'}`,
+        },
+          h('img', {
+            src: item.fullsize,
+            alt: item.alt || '',
+            style: {
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+            },
+            loading: 'lazy',
+          }),
+          selectedIndex === idx && h('div', {
+            className: 'overlay-content',
+            style: {
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 50%, transparent 100%)',
+              color: '#fff',
+              padding: '3rem 1rem 1rem 1rem',
+              pointerEvents: 'none',
+            },
+            'aria-live': 'polite',
+          },
+            parsed.text && h('p', {
+              style: {
+                margin: '0 0 0.75rem 0',
+                fontSize: '1rem',
+                lineHeight: '1.4',
+              }
+            }, parsed.text),
+            parsed.hashtags.length > 0 && h('div', {
+              style: {
+                display: 'flex',
+                gap: '0.5rem',
+                flexWrap: 'wrap',
+                marginBottom: '0.75rem',
+              }
+            },
+              parsed.hashtags.map((tag, tagIdx) => h('button', {
+                key: tagIdx,
+                onClick: (e) => {
+                  e.stopPropagation();
+                  setFilterHashtag(tag);
+                  setSelectedIndex(null);
+                },
+                onKeyDown: (e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setFilterHashtag(tag);
+                    setSelectedIndex(null);
+                  }
+                },
+                style: {
+                  backgroundColor: 'rgba(255,255,255,0.2)',
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '4px',
+                  fontSize: '0.75rem',
+                  fontWeight: '500',
+                  border: 'none',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  pointerEvents: 'auto',
+                }
+              }, tag))
+            ),
+            h('div', {
+              style: {
+                display: 'flex',
+                gap: '1rem',
+                fontSize: '0.875rem',
+              }
+            },
+              h('span', { 'aria-label': `${item.post.replyCount} replies` }, `💬 ${item.post.replyCount}`),
+              h('span', { 'aria-label': `${item.post.repostCount} reposts` }, `🔁 ${item.post.repostCount}`),
+              h('span', { 'aria-label': `${item.post.likeCount} likes` }, `❤️ ${item.post.likeCount}`)
+            )
+          )
+        );
+      })
+    )
+  );
+}
+
+class BlueskyImageFeed extends HTMLElement {
+  connectedCallback() {
+    const handle = this.getAttribute('handle');
+    render(h(ImageFeed, { handle }), this);
+  }
+
+  disconnectedCallback() {
+    render(null, this);
+  }
+
+  static get observedAttributes() {
+    return ['handle'];
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'handle' && oldValue !== newValue) {
+      const handle = this.getAttribute('handle');
+      render(h(ImageFeed, { handle }), this);
+    }
+  }
+}
+
+customElements.define('bluesky-image-feed', BlueskyImageFeed);
