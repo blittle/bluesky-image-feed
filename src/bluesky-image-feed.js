@@ -237,73 +237,79 @@ function ImageFeed({ handle }) {
             },
             loading: 'lazy',
           }),
-          selectedIndex === idx && h('div', {
-            className: 'overlay-content',
-            style: {
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 50%, transparent 100%)',
-              color: '#fff',
-              padding: '3rem 1rem 1rem 1rem',
-              pointerEvents: 'none',
-            },
-            'aria-live': 'polite',
-          },
-            parsed.text && h('p', {
-              style: {
-                margin: '0 0 0.75rem 0',
-                fontSize: '1rem',
-                lineHeight: '1.4',
-              }
-            }, parsed.text),
-            parsed.hashtags.length > 0 && h('div', {
-              style: {
-                display: 'flex',
-                gap: '0.5rem',
-                flexWrap: 'wrap',
-                marginBottom: '0.75rem',
-              }
-            },
-              parsed.hashtags.map((tag, tagIdx) => h('button', {
-                key: tagIdx,
-                onClick: (e) => {
-                  e.stopPropagation();
-                  setFilterHashtag(tag);
-                  setSelectedIndex(null);
-                },
-                onKeyDown: (e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    setFilterHashtag(tag);
-                    setSelectedIndex(null);
-                  }
-                },
-                style: {
-                  backgroundColor: 'rgba(255,255,255,0.2)',
-                  padding: '0.25rem 0.5rem',
-                  borderRadius: '4px',
-                  fontSize: '0.75rem',
-                  fontWeight: '500',
-                  border: 'none',
-                  color: '#fff',
-                  cursor: 'pointer',
-                  pointerEvents: 'auto',
-                }
-              }, tag))
-            ),
+          selectedIndex === idx && h('div', null,
             h('div', {
               style: {
-                display: 'flex',
-                gap: '1rem',
+                position: 'absolute',
+                top: '0.5rem',
+                right: '0.5rem',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                color: '#fff',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '4px',
                 fontSize: '0.875rem',
-              }
+                fontWeight: '500',
+                pointerEvents: 'none',
+              },
+              'aria-label': `${item.post.likeCount} likes`,
+            }, `❤️ ${item.post.likeCount}`),
+            h('div', {
+              className: 'overlay-content',
+              style: {
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 50%, transparent 100%)',
+                color: '#fff',
+                padding: '3rem 1rem 1rem 1rem',
+                pointerEvents: 'none',
+              },
+              'aria-live': 'polite',
             },
-              h('span', { 'aria-label': `${item.post.replyCount} replies` }, `💬 ${item.post.replyCount}`),
-              h('span', { 'aria-label': `${item.post.repostCount} reposts` }, `🔁 ${item.post.repostCount}`),
-              h('span', { 'aria-label': `${item.post.likeCount} likes` }, `❤️ ${item.post.likeCount}`)
+              parsed.text && h('p', {
+                style: {
+                  margin: '0 0 0.75rem 0',
+                  fontSize: '1rem',
+                  lineHeight: '1.4',
+                }
+              }, parsed.text),
+              parsed.hashtags.length > 0 && h('div', {
+                style: {
+                  display: 'flex',
+                  gap: '0.5rem',
+                  flexWrap: 'wrap',
+                  marginBottom: '0.75rem',
+                }
+              },
+                parsed.hashtags.map((tag, tagIdx) => h('button', {
+                  key: tagIdx,
+                  onClick: (e) => {
+                    e.stopPropagation();
+                    setFilterHashtag(tag);
+                    setSelectedIndex(null);
+                  },
+                  onKeyDown: (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setFilterHashtag(tag);
+                      setSelectedIndex(null);
+                    }
+                  },
+                  style: {
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem',
+                    fontWeight: '500',
+                    border: 'none',
+                    color: '#fff',
+                    cursor: 'pointer',
+                    pointerEvents: 'auto',
+                  }
+                }, tag))
+              )
             )
           )
         );
