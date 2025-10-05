@@ -74,8 +74,48 @@ export default function UserImageFeed() {
 
   return (
     <div>
+      <style>{`
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes fadeInScale {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .grid-item-animate {
+          animation: fadeInScale 0.6s ease-out;
+        }
+        .filter-banner {
+          animation: slideDown 0.3s ease-out;
+        }
+        .overlay-content {
+          animation: slideUp 0.3s ease-out;
+        }
+      `}</style>
       {filterHashtag && (
         <div
+          className="filter-banner"
           style={{
             maxWidth: "1200px",
             margin: "0 auto",
@@ -118,12 +158,14 @@ export default function UserImageFeed() {
           <div
             key={idx}
             role="gridcell"
+            className="grid-item-animate"
             style={{
               position: "relative",
               cursor: "pointer",
               opacity:
                 selectedIndex !== null && selectedIndex !== idx ? 0.3 : 1,
               transition: "opacity 0.3s ease",
+              animationDelay: `${idx * 0.05}s`,
             }}
             onClick={() => setSelectedIndex(selectedIndex === idx ? null : idx)}
             onKeyDown={(e) => handleKeyDown(idx, e)}
@@ -154,6 +196,7 @@ export default function UserImageFeed() {
                   : { text: "", hashtags: [] };
                 return (
                   <div
+                    className="overlay-content"
                     style={{
                       position: "absolute",
                       bottom: 0,
