@@ -1,6 +1,6 @@
 {
   "name": "bluesky-image-feed",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "main": "dist/bluesky-image-feed.js",
   "scripts": {
@@ -9,7 +9,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@atproto/api": "^0.17.0",
     "preact": "^10.27.2"
   },
   "devDependencies": {

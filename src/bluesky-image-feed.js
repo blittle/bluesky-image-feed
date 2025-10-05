@@ -1,20 +1,14 @@
 import { h, render } from "preact";
 import { useState, useEffect } from "preact/hooks";
-import { AtpAgent } from "@atproto/api";
-
-const agent = new AtpAgent({
-  service: "https://public.api.bsky.app",
-});
 
 async function getImagePostsFromUser(handle) {
-  const response = await agent.getAuthorFeed({
-    actor: handle,
-    limit: 50,
-  });
+  const url = `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor=${encodeURIComponent(handle)}&limit=50`;
+  const response = await fetch(url);
+  const data = await response.json();
 
   const postsWithImages = [];
 
-  for (const item of response.data.feed) {
+  for (const item of data.feed) {
     const post = item.post;
 
     if (

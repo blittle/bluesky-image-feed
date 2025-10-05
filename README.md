@@ -1,8 +1,6 @@
 # Bluesky Image Feed
 
-A lightweight web component for displaying image feeds from Bluesky profiles. See an example at https://photos.bretlittle.com/pages/feed.
-
-_Note: the script is larger than it should be, due to the size of [`@atproto/api`](https://github.com/bluesky-social/atproto/issues/2175)_
+A web component for displaying image feeds from Bluesky profiles. See an example at https://photos.bretlittle.com/pages/feed.
 
 ## Features
 
