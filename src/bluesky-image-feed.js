@@ -124,7 +124,6 @@ function ImageFeed({ handle }) {
           margin: '0 auto',
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 400px), 1fr))',
-          gap: '0',
         }
       },
         // Show 12 skeleton boxes
@@ -315,7 +314,7 @@ function ImageFeed({ handle }) {
 
 class BlueskyImageFeed extends HTMLElement {
   connectedCallback() {
-    const handle = this.getAttribute('handle');
+    const handle = this.getAttribute('user-profile');
     render(h(ImageFeed, { handle }), this);
   }
 
@@ -324,12 +323,12 @@ class BlueskyImageFeed extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['handle'];
+    return ['user-profile'];
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    if (name === 'handle' && oldValue !== newValue) {
-      const handle = this.getAttribute('handle');
+    if (name === 'user-profile' && oldValue !== newValue) {
+      const handle = this.getAttribute('user-profile');
       render(h(ImageFeed, { handle }), this);
     }
   }
