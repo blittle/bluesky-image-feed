@@ -2,7 +2,9 @@ import { h, render } from "preact";
 import { useState, useEffect } from "preact/hooks";
 
 async function getImagePostsFromUser(handle) {
-  const url = `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor=${encodeURIComponent(handle)}&limit=50`;
+  const url = `https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor=${encodeURIComponent(
+    handle
+  )}&limit=50`;
   const response = await fetch(url);
   const data = await response.json();
 
@@ -148,7 +150,7 @@ function ImageFeed({ handle }) {
 
   return h(
     "div",
-    { style: { containerType: "inline-size" } },
+    { style: { containerType: "inline-size", position: "relative" } },
     h(
       "style",
       null,
@@ -187,13 +189,21 @@ function ImageFeed({ handle }) {
         {
           className: "filter-banner",
           style: {
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
             padding: "1rem",
             display: "flex",
             alignItems: "center",
+            justifyContent: "center",
             gap: "0.5rem",
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            backdropFilter: "blur(8px)",
+            color: "#fff",
+            zIndex: 100,
           },
         },
-        h("span", null, "Filtering by:"),
         h(
           "button",
           {
@@ -237,7 +247,7 @@ function ImageFeed({ handle }) {
               position: "relative",
               cursor: "pointer",
               opacity:
-                selectedIndex !== null && selectedIndex !== idx ? 0.3 : 1,
+                selectedIndex !== null && selectedIndex !== idx ? 0.6 : 1,
               transition: "opacity 0.3s ease",
             },
             onClick: () => setSelectedIndex(selectedIndex === idx ? null : idx),
