@@ -238,6 +238,14 @@ export default function UserImageFeed() {
                               setFilterHashtag(tag);
                               setSelectedIndex(null);
                             }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                setFilterHashtag(tag);
+                                setSelectedIndex(null);
+                              }
+                            }}
                             style={{
                               backgroundColor: "rgba(255,255,255,0.2)",
                               padding: "0.25rem 0.5rem",
