@@ -1,8 +1,8 @@
 import { h, render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { BskyAgent } from '@atproto/api';
+import { AtpAgent } from '@atproto/api';
 
-const agent = new BskyAgent({
+const agent = new AtpAgent({
   service: 'https://public.api.bsky.app',
 });
 
@@ -102,7 +102,45 @@ function ImageFeed({ handle }) {
   };
 
   if (loading) {
-    return h('div', { style: { padding: '2rem', textAlign: 'center' } }, 'Loading...');
+    return h('div', null,
+      h('style', null, `
+        @keyframes shimmer {
+          0% {
+            background-position: -1000px 0;
+          }
+          100% {
+            background-position: 1000px 0;
+          }
+        }
+        .skeleton {
+          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+          background-size: 1000px 100%;
+          animation: shimmer 2s infinite;
+        }
+      `),
+      h('div', {
+        style: {
+          maxWidth: '1200px',
+          margin: '0 auto',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 400px), 1fr))',
+          gap: '0',
+        }
+      },
+        // Show 12 skeleton boxes
+        Array.from({ length: 12 }).map((_, idx) =>
+          h('div', {
+            key: idx,
+            className: 'skeleton',
+            style: {
+              width: '100%',
+              paddingBottom: '100%', // 1:1 aspect ratio
+              position: 'relative',
+            }
+          })
+        )
+      )
+    );
   }
 
   return h('div', null,
@@ -117,14 +155,6 @@ function ImageFeed({ handle }) {
           transform: translateY(0);
         }
       }
-      @keyframes fadeInScale {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
-      }
       @keyframes slideUp {
         from {
           opacity: 0;
@@ -134,9 +164,6 @@ function ImageFeed({ handle }) {
           opacity: 1;
           transform: translateY(0);
         }
-      }
-      .grid-item-animate {
-        animation: fadeInScale 0.6s ease-out;
       }
       .filter-banner {
         animation: slideDown 0.3s ease-out;
@@ -187,13 +214,11 @@ function ImageFeed({ handle }) {
         return h('div', {
           key: idx,
           role: 'gridcell',
-          className: 'grid-item-animate',
           style: {
             position: 'relative',
             cursor: 'pointer',
             opacity: selectedIndex !== null && selectedIndex !== idx ? 0.3 : 1,
             transition: 'opacity 0.3s ease',
-            animationDelay: `${idx * 0.05}s`,
           },
           onClick: () => setSelectedIndex(selectedIndex === idx ? null : idx),
           onKeyDown: (e) => handleKeyDown(idx, e),
