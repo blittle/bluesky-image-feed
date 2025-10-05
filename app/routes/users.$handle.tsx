@@ -44,6 +44,12 @@ export default function UserImageFeed() {
     }
   };
 
+  const handleFocus = (idx: number) => {
+    if (selectedIndex !== null && selectedIndex !== idx) {
+      setSelectedIndex(null);
+    }
+  };
+
   return (
     <div>
       <div
@@ -70,6 +76,7 @@ export default function UserImageFeed() {
               setSelectedIndex(selectedIndex === idx ? null : idx)
             }
             onKeyDown={(e) => handleKeyDown(idx, e)}
+            onFocus={() => handleFocus(idx)}
             tabIndex={0}
             aria-pressed={selectedIndex === idx}
             aria-label={
