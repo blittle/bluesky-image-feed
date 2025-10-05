@@ -1,87 +1,91 @@
-# Welcome to React Router!
+# Bluesky Image Feed
 
-A modern, production-ready template for building full-stack React applications using React Router.
-
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+A lightweight web component for displaying image feeds from Bluesky profiles. See an example at https://photos.bretlittle.com/pages/feed.
 
 ## Features
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+- 📸 Displays all images from a Bluesky user's feed
+- 🏷️ Interactive hashtag filtering
+- ❤️ Shows like counts
+- ♿ Fully accessible with keyboard navigation
+- 📱 Responsive design using container queries
+- ✨ Smooth animations and transitions
+- 🎨 Full-width and customizable
 
-## Getting Started
+## Installation
 
-### Installation
-
-Install the dependencies:
+### Via NPM
 
 ```bash
-npm install
+npm install bluesky-image-feed
 ```
 
-### Development
+Then import in your JavaScript:
 
-Start the development server with HMR:
-
-```bash
-npm run dev
+```javascript
+import "bluesky-image-feed";
 ```
 
-Your application will be available at `http://localhost:5173`.
+### Via CDN (unpkg)
 
-## Building for Production
+Add this script tag to your HTML:
 
-Create a production build:
-
-```bash
-npm run build
+```html
+<script
+  type="module"
+  src="https://unpkg.com/bluesky-image-feed@latest/dist/bluesky-image-feed.js"
+></script>
 ```
 
-## Deployment
+## Usage
 
-### Docker Deployment
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My Bluesky Images</title>
+  </head>
+  <body>
+    <!-- Add a container with max-width for best results -->
+    <div style="max-width: 1200px; margin: 0 auto;">
+      <bluesky-image-feed
+        user-profile="username.bsky.social"
+      ></bluesky-image-feed>
+    </div>
 
-To build and run using Docker:
-
-```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
+    <script
+      type="module"
+      src="https://unpkg.com/bluesky-image-feed@latest/dist/bluesky-image-feed.js"
+    ></script>
+  </body>
+</html>
 ```
 
-The containerized application can be deployed to any platform that supports Docker, including:
+## Attributes
 
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
+- `user-profile` (required): The Bluesky handle to display images from (e.g., "username.bsky.social")
 
-### DIY Deployment
+## Customization
 
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
+The component is full-width and uses container queries to adapt to its container size. Wrap it in a container to control the width:
 
-Make sure to deploy the output of `npm run build`
+```html
+<!-- Fixed width -->
+<div style="max-width: 1200px; margin: 0 auto;">
+  <bluesky-image-feed user-profile="username.bsky.social"></bluesky-image-feed>
+</div>
 
+<!-- Full width -->
+<bluesky-image-feed user-profile="username.bsky.social"></bluesky-image-feed>
+
+<!-- Sidebar (narrow) -->
+<div style="width: 400px;">
+  <bluesky-image-feed user-profile="username.bsky.social"></bluesky-image-feed>
+</div>
 ```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
 
-## Styling
+## Interaction
 
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+- **Click an image** to view details, description, hashtags, and like count
+- **Click a hashtag badge** to filter the grid by that hashtag
+- **Keyboard navigation**: Tab to focus images, Enter/Space to select, Escape to deselect
