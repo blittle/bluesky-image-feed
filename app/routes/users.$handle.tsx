@@ -26,6 +26,20 @@ export async function loader({ params }: LoaderFunctionArgs) {
 export default function UserImageFeed() {
   const { handle, posts } = useLoaderData<typeof loader>();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [filterHashtag, setFilterHashtag] = useState<string | null>(null);
+
+  const parseTextAndHashtags = (text: string) => {
+    const hashtagRegex = /#\w+/g;
+    const hashtags = text.match(hashtagRegex) || [];
+    const filteredHashtags = hashtags
+      .filter(
+        (tag) =>
+          tag.toLowerCase() !== "#photography" && tag.toLowerCase() !== "#noai"
+      )
+      .map((tag) => tag.substring(1)); // Remove the # symbol
+    const textWithoutHashtags = text.replace(hashtagRegex, "").trim();
+    return { text: textWithoutHashtags, hashtags: filteredHashtags };
+  };
 
   const allImages = posts.flatMap((post, postIdx) =>
     post.images.map((image, imgIdx) => ({
@@ -34,6 +48,14 @@ export default function UserImageFeed() {
       imageIndex: imgIdx,
     }))
   );
+
+  const filteredImages = filterHashtag
+    ? allImages.filter((item) => {
+        if (!item.post.text) return false;
+        const { hashtags } = parseTextAndHashtags(item.post.text);
+        return hashtags.includes(filterHashtag);
+      })
+    : allImages;
 
   const handleKeyDown = (idx: number, e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -52,29 +74,58 @@ export default function UserImageFeed() {
 
   return (
     <div>
+      {filterHashtag && (
+        <div
+          style={{
+            maxWidth: "1200px",
+            margin: "0 auto",
+            padding: "1rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+          }}
+        >
+          <span>Filtering by:</span>
+          <button
+            onClick={() => setFilterHashtag(null)}
+            style={{
+              backgroundColor: "#0085ff",
+              color: "#fff",
+              padding: "0.5rem 1rem",
+              borderRadius: "4px",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "0.875rem",
+              fontWeight: "500",
+            }}
+          >
+            {filterHashtag} ×
+          </button>
+        </div>
+      )}
       <div
         style={{
           maxWidth: "1200px",
           margin: "0 auto",
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 400px), 1fr))",
+          gridTemplateColumns:
+            "repeat(auto-fill, minmax(min(100%, 400px), 1fr))",
         }}
         role="grid"
         aria-label={`Image feed from @${handle}`}
       >
-        {allImages.map((item, idx) => (
+        {filteredImages.map((item, idx) => (
           <div
             key={idx}
             role="gridcell"
             style={{
               position: "relative",
               cursor: "pointer",
-              opacity: selectedIndex !== null && selectedIndex !== idx ? 0.3 : 1,
+              opacity:
+                selectedIndex !== null && selectedIndex !== idx ? 0.3 : 1,
               transition: "opacity 0.3s ease",
             }}
-            onClick={() =>
-              setSelectedIndex(selectedIndex === idx ? null : idx)
-            }
+            onClick={() => setSelectedIndex(selectedIndex === idx ? null : idx)}
             onKeyDown={(e) => handleKeyDown(idx, e)}
             onFocus={() => handleFocus(idx)}
             tabIndex={0}
@@ -96,51 +147,91 @@ export default function UserImageFeed() {
               }}
               loading="lazy"
             />
-            {selectedIndex === idx && (
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  background:
-                    "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 50%, transparent 100%)",
-                  color: "#fff",
-                  padding: "3rem 1rem 1rem 1rem",
-                  pointerEvents: "none",
-                }}
-                aria-live="polite"
-              >
-                {item.post.text && (
-                  <p
+            {selectedIndex === idx &&
+              (() => {
+                const parsed = item.post.text
+                  ? parseTextAndHashtags(item.post.text)
+                  : { text: "", hashtags: [] };
+                return (
+                  <div
                     style={{
-                      margin: "0 0 0.75rem 0",
-                      fontSize: "1rem",
-                      lineHeight: "1.4",
+                      position: "absolute",
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      background:
+                        "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 50%, transparent 100%)",
+                      color: "#fff",
+                      padding: "3rem 1rem 1rem 1rem",
+                      pointerEvents: "none",
                     }}
+                    aria-live="polite"
                   >
-                    {item.post.text}
-                  </p>
-                )}
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "1rem",
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  <span aria-label={`${item.post.replyCount} replies`}>
-                    💬 {item.post.replyCount}
-                  </span>
-                  <span aria-label={`${item.post.repostCount} reposts`}>
-                    🔁 {item.post.repostCount}
-                  </span>
-                  <span aria-label={`${item.post.likeCount} likes`}>
-                    ❤️ {item.post.likeCount}
-                  </span>
-                </div>
-              </div>
-            )}
+                    {parsed.text && (
+                      <p
+                        style={{
+                          margin: "0 0 0.75rem 0",
+                          fontSize: "1rem",
+                          lineHeight: "1.4",
+                        }}
+                      >
+                        {parsed.text}
+                      </p>
+                    )}
+                    {parsed.hashtags.length > 0 && (
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "0.5rem",
+                          flexWrap: "wrap",
+                          marginBottom: "0.75rem",
+                        }}
+                      >
+                        {parsed.hashtags.map((tag, tagIdx) => (
+                          <button
+                            key={tagIdx}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFilterHashtag(tag);
+                              setSelectedIndex(null);
+                            }}
+                            style={{
+                              backgroundColor: "rgba(255,255,255,0.2)",
+                              padding: "0.25rem 0.5rem",
+                              borderRadius: "4px",
+                              fontSize: "0.75rem",
+                              fontWeight: "500",
+                              border: "none",
+                              color: "#fff",
+                              cursor: "pointer",
+                              pointerEvents: "auto",
+                            }}
+                          >
+                            {tag}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "1rem",
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      <span aria-label={`${item.post.replyCount} replies`}>
+                        💬 {item.post.replyCount}
+                      </span>
+                      <span aria-label={`${item.post.repostCount} reposts`}>
+                        🔁 {item.post.repostCount}
+                      </span>
+                      <span aria-label={`${item.post.likeCount} likes`}>
+                        ❤️ {item.post.likeCount}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
           </div>
         ))}
       </div>
