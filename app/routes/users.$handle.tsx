@@ -1,5 +1,6 @@
 import { type LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
+import { useState } from "react";
 import { getImagePostsFromUser, getPostReplies } from "~/lib/bluesky.server";
 
 export async function loader({ params }: LoaderFunctionArgs) {
@@ -24,8 +25,24 @@ export async function loader({ params }: LoaderFunctionArgs) {
 
 export default function UserImageFeed() {
   const { handle, posts } = useLoaderData<typeof loader>();
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
-  const allImages = posts.flatMap((post) => post.images);
+  const allImages = posts.flatMap((post, postIdx) =>
+    post.images.map((image, imgIdx) => ({
+      ...image,
+      post,
+      imageIndex: imgIdx,
+    }))
+  );
+
+  const handleKeyDown = (idx: number, e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setSelectedIndex(selectedIndex === idx ? null : idx);
+    } else if (e.key === "Escape" && selectedIndex !== null) {
+      setSelectedIndex(null);
+    }
+  };
 
   return (
     <div>
@@ -36,19 +53,88 @@ export default function UserImageFeed() {
           display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 400px), 1fr))",
         }}
+        role="grid"
+        aria-label={`Image feed from @${handle}`}
       >
-        {allImages.map((image, idx) => (
-          <img
+        {allImages.map((item, idx) => (
+          <div
             key={idx}
-            src={image.fullsize}
-            alt={image.alt || ""}
+            role="gridcell"
             style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
+              position: "relative",
+              cursor: "pointer",
+              opacity: selectedIndex !== null && selectedIndex !== idx ? 0.3 : 1,
+              transition: "opacity 0.3s ease",
             }}
-          />
+            onClick={() =>
+              setSelectedIndex(selectedIndex === idx ? null : idx)
+            }
+            onKeyDown={(e) => handleKeyDown(idx, e)}
+            tabIndex={0}
+            aria-pressed={selectedIndex === idx}
+            aria-label={
+              item.alt
+                ? item.alt
+                : `Image ${idx + 1} from post: ${item.post.text || "No description"}`
+            }
+          >
+            <img
+              src={item.fullsize}
+              alt={item.alt || ""}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
+              }}
+              loading="lazy"
+            />
+            {selectedIndex === idx && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  background:
+                    "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 50%, transparent 100%)",
+                  color: "#fff",
+                  padding: "3rem 1rem 1rem 1rem",
+                  pointerEvents: "none",
+                }}
+                aria-live="polite"
+              >
+                {item.post.text && (
+                  <p
+                    style={{
+                      margin: "0 0 0.75rem 0",
+                      fontSize: "1rem",
+                      lineHeight: "1.4",
+                    }}
+                  >
+                    {item.post.text}
+                  </p>
+                )}
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "1rem",
+                    fontSize: "0.875rem",
+                  }}
+                >
+                  <span aria-label={`${item.post.replyCount} replies`}>
+                    💬 {item.post.replyCount}
+                  </span>
+                  <span aria-label={`${item.post.repostCount} reposts`}>
+                    🔁 {item.post.repostCount}
+                  </span>
+                  <span aria-label={`${item.post.likeCount} likes`}>
+                    ❤️ {item.post.likeCount}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         ))}
       </div>
     </div>
