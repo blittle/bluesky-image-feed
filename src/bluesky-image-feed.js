@@ -262,7 +262,7 @@ function ImageFeed({ handle }) {
               }`,
           },
           h("img", {
-            src: item.fullsize,
+            src: item.thumb,
             alt: item.alt || "",
             style: {
               width: "100%",
